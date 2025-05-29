@@ -12,11 +12,11 @@ import random
 import copy
 
 #Constantes
-lamps_number = 5
-radius = 0.3
-mutated = True
-seed = 43
-square = [1,1]
+lamps_number   = 5
+radius         = 0.3
+mutated        = True
+seed           = 43
+square         = [1,1]
 discretization = 100 # TODO lower discretization here to speed up computation, increase for increased precision
 nb_selected_individuals = 2 # on évaluera leur fitness
 print("Figures/lampscc_{}_radius_{}_seed_{}_mutation_{}".format(lamps_number, radius, seed, mutated))
@@ -32,16 +32,16 @@ evolutionary_algorithm = inspyred.ec.EvolutionaryComputation(
 
 
 def global_fitness(lamps, square):
-  globalFitness = 0.0
+  globalFitness     = 0.0
   individualFitness = [0] * len(lamps)
 
   # this is a very rough discretization of the space
   discretizationStep = square[0] / discretization
-  totalArea = square[0] * discretization * square[1] * discretization
+  totalArea          = square[0] * discretization * square[1] * discretization
 
   # compute coverage of the square, going step by step
   coverage = 0.0
-  overlap = 0.0
+  overlap  = 0.0
 
   for x in np.arange(0.0, square[0], discretizationStep):
     for y in np.arange(0.0, square[1], discretizationStep):
@@ -71,10 +71,10 @@ def global_fitness(lamps, square):
 
 def mutation(random, candidate, args):
   mut_rate = args.setdefault('mutation_rate', 0.1)
-  mean = args.setdefault('gaussian_mean', 0.0)
-  stdev = args.setdefault('gaussian_stdev', 1.0)
-  bounder = args['_ec'].bounder
-  mutant = copy.copy(candidate)
+  mean     = args.setdefault('gaussian_mean', 0.0)
+  stdev    = args.setdefault('gaussian_stdev', 1.0)
+  bounder  = args['_ec'].bounder
+  mutant   = copy.copy(candidate)
   for i, m in enumerate(mutant):
     if random.random() < mut_rate:
       mutant[i][0] += random.gauss(mean, stdev)
@@ -101,17 +101,17 @@ def visualize(lamps, radius, square, globalFitness):
 # Cette fonction est une quasi-copie de la fonction evaluateLamp, mais on prend en compte la fitness globale et locale
 def evaluateLamps_cc(lamps, radius, square, visualize=False):
 
-  globalFitness = 0.0
+  globalFitness     = 0.0
   individualFitness = [0] * len(lamps)
-  contribution = [0] * len(lamps)
+  contribution      = [0] * len(lamps)
 
   # compute coverage of the square, going step by step
   coverage = 0.0
-  overlap = 0.0
+  overlap  = 0.0
 
   # this is a very rough discretization of the space
   discretizationStep = square[0] / discretization
-  totalArea = square[0] * discretization * square[1] * discretization
+  totalArea          = square[0] * discretization * square[1] * discretization
 
   for x in np.arange(0.0, square[0], discretizationStep):
     for y in np.arange(0.0, square[1], discretizationStep):
@@ -167,9 +167,9 @@ def evaluateLamps_cc(lamps, radius, square, visualize=False):
 
 
 def evaluateCandidates(candidates, args):
-  radius = args["radius"]
+  radius    = args["radius"]
   visualize = args["visualize"]
-  square = args["square"]
+  square    = args["square"]
 
   # iterate over all the candidates, run the Weierstrass function, append result to list
   #candidates représente une configuration de lampes
@@ -200,11 +200,13 @@ def my_replacement(random, population, parents, offspring, args):
     parents2_candidates = [individual.candidate for individual in parents2]
     globalFitness = global_fitness(parents2_candidates,[1,1])
     parents_without_candidate = [0]*(len(parents)-1)
+
     for p2 in range(len(parents)): 
       if p2 < p:
         parents_without_candidate[p2] = parents[p2].candidate
       elif p2 > p:
         parents_without_candidate[p2-1] = parents[p2].candidate
+
     globalFitness_without = global_fitness(parents_without_candidate,[1,1])
     fitness_marginal = globalFitness - globalFitness_without
     parents2[p].fitness = fitness_marginal
@@ -245,11 +247,9 @@ def my_replacement(random, population, parents, offspring, args):
 
 
 def generatorLamps(random, args):
-  number_of_dimensions = args[
-      "number_of_dimensions"]  # the number of dimensions of the problem will be specified later, and put it in "args"
-  minimum = args[
-      "minimum"]  # also, the minimum value of each dimension will be specified later in "args"
-  maximum = args["maximum"]  # same goes for the maximum value
+  number_of_dimensions = args["number_of_dimensions"]  # the number of dimensions of the problem will be specified later, and put it in "args"
+  minimum              = args["minimum"]  # also, the minimum value of each dimension will be specified later in "args"
+  maximum              = args["maximum"]  # same goes for the maximum value
   # the individual will be a series of "number_of_dimensions" random values, generated between "minimum" and "maximum"
   individual = [
       random.uniform(minimum, maximum),
@@ -292,36 +292,35 @@ def main():
   else:
     evolutionary_algorithm.variator = [inspyred.ec.variators.uniform_crossover]
   
+  # Replacer
   evolutionary_algorithm.replacer = my_replacement
   #evolutionary_algorithm.replacer = inspyred.ec.replacers.truncation_replacement  # "plus" -> "mu+lambda"
   #evolutionary_algorithm.replacer = inspyred.ec.replacers.random_replacement # pour comparer à une remplacement aléatoire
 
+  # Terminator
   evolutionary_algorithm.terminator = inspyred.ec.terminators.evaluation_termination  # the algorithm terminates when a given number of evaluations (see below) is reached
 
+  # Observer
   #evolutionary_algorithm.observer = inspyred.ec.observers.best_observer  # prints best individual to screen
   evolutionary_algorithm.observer = inspyred.ec.observers.stats_observer # print out population statistics
   #evolutionary_algorithm.observer = inspyred.ec.observers.plot_observer  # plots evolution
 
   final_population = evolutionary_algorithm.evolve(
-      generator=generatorLamps,  # of course, we need to specify the evaluator
-      evaluator=evaluateCandidates,  # and the corresponding evaluator
-      pop_size=lamps_number,  # size of the population
-      num_selected=2,  # size of the offspring (children individuals)
-      maximize=True,  # this is a maximization problem
-      max_evaluations=
-      500,  # maximum number of evaluations before stopping, used by the terminator
+      generator       = generatorLamps,  # of course, we need to specify the evaluator
+      evaluator       = evaluateCandidates,  # and the corresponding evaluator
+      pop_size        = lamps_number,  # size of the population
+      num_selected    = 2,  # size of the offspring (children individuals)
+      maximize        = True,  # this is a maximization problem
+      max_evaluations = 500,  # maximum number of evaluations before stopping, used by the terminator
 
       # all arguments specified below, THAT ARE NOT part of the "evolve" method, will be automatically placed in "args"
-      lamps_number=lamps_number,  # nombre de lampes dans le carré
-      number_of_dimensions=
-      2,  # number of dimensions of the problem, used by "generator_weierstrass"
-      minimum=
-      0,  # minimum value of each dimension, used by "generator_weierstrass"
-      maximum=
-      1,  # maximum value of each dimension, used by "generator_weierstrass"
-      radius=radius,  # rayon de la lampe
-      square=[1, 1],  # définit le carré
-      visualize=False,  # Permet d'afficher le carré
+      lamps_number         = lamps_number,  # nombre de lampes dans le carré
+      number_of_dimensions = 2,  # number of dimensions of the problem, used by "generator_weierstrass"
+      minimum              = 0,  # minimum value of each dimension, used by "generator_weierstrass"
+      maximum              = 1,  # maximum value of each dimension, used by "generator_weierstrass"
+      radius               = radius,  # rayon de la lampe
+      square               = [1, 1],  # définit le carré
+      visualize            = False,  # Permet d'afficher le carré
   )
 
   # after the evolution is over, the resulting population is stored in "final_population"; the best individual is on the top
